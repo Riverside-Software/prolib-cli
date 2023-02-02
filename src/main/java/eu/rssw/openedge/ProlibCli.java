@@ -25,6 +25,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,6 +66,7 @@ public class ProlibCli {
     try {
       jc.parse(args);
     } catch (ParameterException caught) {
+      caught.printStackTrace();
       jc.usage();
       System.exit(1);
     }
@@ -80,13 +84,15 @@ public class ProlibCli {
   }
 
   public void executeList() throws IOException {
-    PLReader reader = new PLReader(list.lib);
-    out.printf("%6s %44s %10s %s%n", "CRC", "Digest", "Size", "File");
+    PLReader reader = new PLReader(list.lib.get(0));
+    out.printf("%6s  %20s  %44s  %s%n", "CRC", "Timestamp", "Digest", "Size", "File name");
     for (FileEntry entry : reader.getFileList()) {
       try {
-        RCodeInfo info = new RCodeInfo(reader.getInputStream(entry));
-        out.printf("%6d %44s %10d %s%n", info.getCrc(), info.getDigest() == null ? "" : info.getDigest(),
-            entry.getSize(), entry.getFileName());
+        RCodeInfo rci1 = new RCodeInfo(reader.getInputStream(entry));
+        out.printf("%6s  %20s  %44s  %10d  %s%n", rci1.getCrc(),
+            Instant.ofEpochMilli(rci1.getTimeStamp() * 1000).atOffset(ZoneOffset.UTC).format(
+                DateTimeFormatter.ISO_INSTANT),
+            rci1.getDigest(), entry.getSize(), entry.getFileName());
       } catch (InvalidRCodeException caught) {
         out.printf("%6s %44s %10d %s%n", "-", "-", entry.getSize(), entry.getFileName());
       }
@@ -94,7 +100,7 @@ public class ProlibCli {
   }
 
   public void executeExtract() {
-    PLReader reader = new PLReader(extract.lib);
+    PLReader reader = new PLReader(extract.lib.get(0));
     List<FileEntry> entries = reader.getFileList();
     if (reader.isMemoryMapped()) {
       out.println("Unable to extract files from memory-mapped library");
@@ -146,28 +152,28 @@ public class ProlibCli {
     }
   }
 
-  @Parameters(commandDescription = "Extract files from PL")
+  @Parameters(commandDescription = "Extract PL")
   public static class CommandExtract {
-    @Parameter(names = "-lib", description = "PL file", required = true)
-    private Path lib;
+    @Parameter(description = "PL file", required = true, arity = 1)
+    private List<Path> lib;
 
-    @Parameter(description = "File patterns to extract")
+    @Parameter(names = { "-p", "--pattern" }, description = "File patterns")
     private List<String> patterns;
   }
 
   @Parameters(commandDescription = "List PL content")
   public static class CommandList {
-    @Parameter(names = "-lib", description = "PL file", required = true)
-    private Path lib;
+    @Parameter(description = "/path/to/file.pl", required = true, arity = 1)
+    private List<Path> lib;
 
   }
 
   @Parameters(commandDescription = "Compare two PL")
   public static class CommandCompare {
-    @Parameter(names = "-lib", arity = 2, description = "Source and target PL files", required = true)
+    @Parameter(arity = 2, description = "Source and target PL files", required = true)
     private List<Path> libs;
 
-    @Parameter(names = "-showIdenticals", description = "Also display identical files")
+    @Parameter(names =  { "-i", "--showIdenticals" }, description = "Also display identical files")
     private Boolean showIdenticals = false;
   }
 }
