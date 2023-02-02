@@ -9,7 +9,7 @@ Java 11
 ## List command line
 
 ```
-java -jar probli-cli.jar list /path/to/pl
+java -jar prolib-cli.jar list /path/to/pl
 ```
 
 Sample output:
@@ -25,7 +25,7 @@ Sample output:
 ## Scan command line
 
 ```
-java -jar probli-cli.jar extract /path/to/pl
+java -jar prolib-cli.jar extract /path/to/pl
 ```
 
 Extract PL file in current directory
