@@ -85,7 +85,7 @@ public class ProlibCli {
 
   public void executeList() throws IOException {
     PLReader reader = new PLReader(list.lib.get(0));
-    out.printf("%6s  %20s  %44s  %s%n", "CRC", "Timestamp", "Digest", "Size", "File name");
+    out.printf("%6s  %20s  %44s  %10s  %s%n", "CRC", "Timestamp", "Digest", "Size", "File name");
     for (FileEntry entry : reader.getFileList()) {
       try {
         RCodeInfo rci1 = new RCodeInfo(reader.getInputStream(entry));
