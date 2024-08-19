@@ -90,13 +90,16 @@ public class ProlibCli {
       try {
         RCodeInfo rci1 = new RCodeInfo(reader.getInputStream(entry));
         out.printf("%6s  %20s  %44s  %10d  %s%n", rci1.getCrc(),
-            Instant.ofEpochMilli(rci1.getTimeStamp() * 1000).atOffset(ZoneOffset.UTC).format(
-                DateTimeFormatter.ISO_INSTANT),
-            rci1.getDigest(), entry.getSize(), entry.getFileName());
+            list.hideTimeStamp ? "" : timeStampToString(rci1.getTimeStamp()), rci1.getDigest(), entry.getSize(),
+            entry.getFileName());
       } catch (InvalidRCodeException caught) {
         out.printf("%6s %44s %10d %s%n", "-", "-", entry.getSize(), entry.getFileName());
       }
     }
+  }
+
+  private String timeStampToString(long ts) {
+    return Instant.ofEpochMilli(ts * 1000).atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
   }
 
   public void executeExtract() {
@@ -166,6 +169,8 @@ public class ProlibCli {
     @Parameter(description = "/path/to/file.pl", required = true, arity = 1)
     private List<Path> lib;
 
+    @Parameter(names = {"--no-timestamp"}, description = "Hide timestamp")
+    private boolean hideTimeStamp = false;
   }
 
   @Parameters(commandDescription = "Compare two PL")
